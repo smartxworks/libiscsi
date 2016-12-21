@@ -91,8 +91,8 @@ iscsi_add_to_outqueue(struct iscsi_context *iscsi, struct iscsi_pdu *pdu)
 		pdu->next = NULL;
 		return;
 	}
-	
-	/* queue pdus in ascending order of CmdSN. 
+
+	/* queue pdus in ascending order of CmdSN.
 	 * ensure that pakets with the same CmdSN are kept in FIFO order.
 	 * immediate PDUs are queued in front of queue with the CmdSN
 	 * of the first element in the outqueue.
@@ -117,7 +117,7 @@ iscsi_add_to_outqueue(struct iscsi_context *iscsi, struct iscsi_pdu *pdu)
 		last=current;
 		current=current->next;
 	} while (current != NULL);
-	
+
 	last->next = pdu;
 	pdu->next = NULL;
 }
@@ -472,6 +472,73 @@ iscsi_out_queue_length(struct iscsi_context *iscsi)
 
 	return i;
 }
+ssize_t
+iscsi_iovector_append(struct iscsi_context *iscsi, struct scsi_iovector *parent_iovector, struct scsi_iovector *iovector, uint32_t pos, ssize_t count)
+{
+	struct scsi_iovec *iov, *iov2;
+	int niov;
+	uint32_t len2;
+
+	if (iovector->iov == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (pos < iovector->offset) {
+		iscsi_set_error(iscsi, "iovector reset. pos is smaller than"
+				"current offset");
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (iovector->niov <= iovector->consumed) {
+		/* someone issued a read/write but did not provide enough user buffers for all the data.
+		 * maybe someone tried to read just 512 bytes off a MMC device?
+		 */
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* iov is a pointer to the first iovec to pass */
+	iov = &iovector->iov[iovector->consumed];
+	pos -= iovector->offset;
+
+	/* forward until iov points to the first iov to pass */
+	while (pos >= iov->iov_len) {
+		iovector->offset += iov->iov_len;
+		iovector->consumed++;
+		pos -= iov->iov_len;
+		if (iovector->niov <= iovector->consumed) {
+			errno = EINVAL;
+			return -1;
+		}
+		iov = &iovector->iov[iovector->consumed];
+	}
+
+	iov2 = iov;         /* iov2 is a pointer to the last iovec to pass */
+	niov = 1;           /* number of iovectors to pass */
+	len2 = pos + count; /* adjust length of iov2 */
+
+	/* forward until iov2 points to the last iovec we pass later. it might
+	   happen that we have a lot of iovectors but are limited by count */
+	while (len2 > iov2->iov_len) {
+		niov++;
+		if (iovector->niov < iovector->consumed + niov) {
+			errno = EINVAL;
+			return -1;
+		}
+		len2 -= iov2->iov_len;
+		iov2 = &iovector->iov[iovector->consumed + niov - 1];
+	}
+
+	if (niov) {
+		memcpy(parent_iovector->iov + parent_iovector->niov, iov,
+			   niov * sizeof(struct scsi_iovec));
+		parent_iovector->niov += niov;
+	}
+
+	return count;
+}
 
 ssize_t
 iscsi_iovector_readv_writev(struct iscsi_context *iscsi, struct scsi_iovector *iovector, uint32_t pos, ssize_t count, int do_write)
@@ -636,7 +703,7 @@ iscsi_read_from_socket(struct iscsi_context *iscsi)
 			}
 			count = recv(iscsi->fd, buf, count, 0);
 		}
-		
+
 		if (count == 0) {
 			return -1;
 		}
@@ -703,7 +770,7 @@ iscsi_write_to_socket(struct iscsi_context *iscsi)
 				ISCSI_LOG(iscsi, 6, "iscsi_write_to_socket: socket is corked");
 				return 0;
 			}
-			
+
 			if (iscsi_serial32_compare(iscsi->outqueue->cmdsn, iscsi->maxcmdsn) > 0
 				&& !(iscsi->outqueue->outdata.data[0] & ISCSI_PDU_IMMEDIATE)) {
 				/* stop sending for non-immediate PDUs. maxcmdsn is reached */
@@ -721,10 +788,10 @@ iscsi_write_to_socket(struct iscsi_context *iscsi)
 				return -1;
 			}
 			iscsi->outqueue_current = iscsi->outqueue;
-			
+
 			/* set exp statsn */
 			iscsi_pdu_set_expstatsn(iscsi->outqueue_current, iscsi->statsn + 1);
-			
+
 			ISCSI_LIST_REMOVE(&iscsi->outqueue, iscsi->outqueue_current);
 			if (!(iscsi->outqueue_current->flags & ISCSI_PDU_DELETE_WHEN_SENT)) {
 				/* we have to add the pdu to the waitqueue already here
@@ -736,31 +803,29 @@ iscsi_write_to_socket(struct iscsi_context *iscsi)
 		}
 
 		pdu = iscsi->outqueue_current;
-		pdu->outdata.size = (pdu->outdata.size + 3) & 0xfffffffc;
+		pdu->outdata.size = (pdu->outdata.size + 3)& 0xfffffffc;
+		struct scsi_iovec iovec_array[32] = {};
+		struct scsi_iovector iovector_pdu = {
+			.iov = iovec_array,
+			.niov = 0,
+			.nalloc = 0,
+			.offset = 0,
+			.consumed = 0,
+		};
+		int total_count = 0;
 
 		/* Write header and any immediate data */
 		if (pdu->outdata_written < pdu->outdata.size) {
-			count = send(iscsi->fd,
-				     pdu->outdata.data + pdu->outdata_written,
-				     pdu->outdata.size - pdu->outdata_written,
-				     socket_flags);
-			if (count == -1) {
-				if (errno == EAGAIN || errno == EWOULDBLOCK) {
-					return 0;
-				}
-				iscsi_set_error(iscsi, "Error when writing to "
-						"socket :%d", errno);
-				return -1;
-			}
-			pdu->outdata_written += count;
-		}
-		/* if we havent written the full header yet. */
-		if (pdu->outdata_written != pdu->outdata.size) {
-			return 0;
+			iovector_pdu.iov[iovector_pdu.niov].iov_base =
+				pdu->outdata.data + pdu->outdata_written;
+			iovector_pdu.iov[iovector_pdu.niov++].iov_len =
+				pdu->outdata.size - pdu->outdata_written;
+      total_count += pdu->outdata.size - pdu->outdata_written;
 		}
 
 		/* Write any iovectors that might have been passed to us */
-		while (pdu->payload_written < pdu->payload_len) {
+		int payload_count = 0;
+		while (pdu->payload_written + payload_count < pdu->payload_len) {
 			struct scsi_iovector* iovector_out;
 
 			iovector_out = iscsi_get_scsi_task_iovector_out(iscsi, pdu);
@@ -770,43 +835,69 @@ iscsi_write_to_socket(struct iscsi_context *iscsi)
 				return -1;
 			}
 
-			count = iscsi_iovector_readv_writev(iscsi,
+			count = iscsi_iovector_append(iscsi, &iovector_pdu,
 				iovector_out,
-				pdu->payload_offset + pdu->payload_written,
-				pdu->payload_len - pdu->payload_written, 1);
-			if (count == -1) {
-				if (errno == EAGAIN || errno == EWOULDBLOCK) {
-					return 0;
-				}
-				iscsi_set_error(iscsi, "Error when writing to "
-						"socket :%d %s", errno,
-						iscsi_get_error(iscsi));
+				pdu->payload_offset + pdu->payload_written + payload_count,
+				pdu->payload_len - pdu->payload_written - payload_count);
+			if (count < 0) {
 				return -1;
 			}
-
-			pdu->payload_written += count;
+			payload_count += count;
 		}
 
 		total = pdu->payload_len;
 		total = (total + 3) & 0xfffffffc;
 
 		/* Write padding */
-		if (pdu->payload_written < total) {
-			count = send(iscsi->fd, padding_buf, total - pdu->payload_written, socket_flags);
-			if (count == -1) {
-				if (errno == EAGAIN || errno == EWOULDBLOCK) {
-					return 0;
-				}
-				iscsi_set_error(iscsi, "Error when writing to "
-						"socket :%d", errno);
-				return -1;
+		if (pdu->payload_written + payload_count < total) {
+			iovector_pdu.iov[iovector_pdu.niov].iov_base = padding_buf;
+			iovector_pdu.iov[iovector_pdu.niov++].iov_len =
+				total - pdu->payload_len;
+			payload_count += total - pdu->payload_len;
+		}
+
+		total_count += payload_count;
+
+		struct msghdr msg = {
+			.msg_name = NULL,
+			.msg_namelen = 0,
+			.msg_iov = (struct iovec *)iovector_pdu.iov,
+			.msg_iovlen = iovector_pdu.niov,
+			.msg_control = NULL,
+			.msg_controllen = 0,
+			.msg_flags = 0
+		};
+		count = sendmsg(iscsi->fd, &msg, socket_flags);
+		if (count == -1) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+				return 0;
 			}
-			pdu->payload_written += count;
+			iscsi_set_error(iscsi,
+							"Error when writing to "
+							"socket :%d %s",
+							errno, iscsi_get_error(iscsi));
+			return -1;
 		}
-		/* if we havent written the full padding yet. */
-		if (pdu->payload_written != total) {
+
+		if (pdu->outdata_written < pdu->outdata.size) {
+			/* if we havent written the full header yet. */
+			if (count + pdu->outdata_written < pdu->outdata.size) {
+				pdu->outdata_written += count;
+				return 0;
+			}
+			count -= pdu->outdata.size - pdu->outdata_written;
+		}
+
+		if (pdu->payload_written < total) {
+		  /* if we havent written the full payload and padding yet. */
+		  if (count < payload_count) {
+		    pdu->payload_written += count;
 			return 0;
+		  }
+		  count -= payload_count;
 		}
+
+		/* done */
 		if (pdu->flags & ISCSI_PDU_CORK_WHEN_SENT) {
 			iscsi->is_corked = 1;
 		}
