@@ -192,6 +192,8 @@ iscsi_create_context(const char *initiator_name)
 	iscsi->tcp_keepintvl=30;
 	iscsi->tcp_keepidle=30;
 
+	iscsi->scsi_timeout = 45;
+
 	iscsi->reconnect_max_retries = -1;
 
 	if (getenv("LIBISCSI_DEBUG") != NULL) {
