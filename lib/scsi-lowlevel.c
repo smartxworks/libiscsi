@@ -1101,7 +1101,7 @@ scsi_maintenancein_datain_unmarshall(struct scsi_task *task)
 			i = 4;
 			while (len >= 8) {
 				struct scsi_command_descriptor *desc;
-			
+
 				desc = &rsoc->descriptors[rsoc->num_descriptors++];
 				desc->opcode =
 					task_get_uint8(task, i);
@@ -2238,7 +2238,7 @@ scsi_cdb_persistent_reserve_out(enum scsi_persistent_out_sa sa, enum scsi_persis
 		buf = scsi_malloc(task, xferlen);
 		if (buf == NULL)
 			goto err;
-		
+
 		memset(buf, 0, xferlen);
 		scsi_set_uint64(&buf[0], basic->reservation_key);
 		scsi_set_uint64(&buf[8], basic->service_action_reservation_key);
@@ -2262,7 +2262,7 @@ scsi_cdb_persistent_reserve_out(enum scsi_persistent_out_sa sa, enum scsi_persis
 	task->cdb[0] = SCSI_OPCODE_PERSISTENT_RESERVE_OUT;
 	task->cdb[1] |= sa & 0x1f;
 	task->cdb[2] = ((scope << 4) & 0xf0) | (type & 0x0f);
-	
+
 	scsi_set_uint32(&task->cdb[5], xferlen);
 
 	task->cdb_size = 10;
@@ -2508,7 +2508,7 @@ scsi_cdb_modeselect10(int pf, int sp, int param_len)
 }
 
 struct scsi_mode_page *
-scsi_modesense_get_page(struct scsi_mode_sense *ms, 
+scsi_modesense_get_page(struct scsi_mode_sense *ms,
 			enum scsi_modesense_page_code page_code,
 			int subpage_code)
 {
@@ -2610,7 +2610,7 @@ scsi_parse_mode_control(struct scsi_task *task, int pos, struct scsi_mode_page *
 static void
 scsi_parse_mode_power_condition(struct scsi_task *task, int pos, struct scsi_mode_page *mp)
 {
-	mp->power_condition.pm_bg_precedence = 
+	mp->power_condition.pm_bg_precedence =
 		(task_get_uint8(task, pos) >> 6) & 0x03;
 	mp->power_condition.standby_y =
 		!!(task_get_uint8(task, pos) & 0x01);
@@ -2718,12 +2718,8 @@ scsi_modesense_datain_unmarshall(struct scsi_task *task, int is_modesense6)
 		ms->block_descriptor_length   = task_get_uint8(task, 3);
 		ms->pages                     = NULL;
 	} else {
-		ms->mode_data_length          = task_get_uint16(task, 0);
-		ms->medium_type               = task_get_uint8(task, 2);
-		ms->device_specific_parameter = task_get_uint8(task, 3);
-		ms->longlba = task_get_uint8(task, 4) & 0x01;
-		ms->block_descriptor_length   = task_get_uint16(task, 6);
-		ms->pages                     = NULL;
+	    /* not supported */
+	    return NULL;
 	}
 
 	if (ms->mode_data_length + 1 > task->datain.size) {
@@ -4062,14 +4058,14 @@ scsi_get_task_private_ptr(struct scsi_task *task)
 }
 
 void
-scsi_task_set_iov_out(struct scsi_task *task, struct scsi_iovec *iov, int niov) 
+scsi_task_set_iov_out(struct scsi_task *task, struct scsi_iovec *iov, int niov)
 {
 	task->iovector_out.iov = iov;
 	task->iovector_out.niov = niov;
 }
 
 void
-scsi_task_set_iov_in(struct scsi_task *task, struct scsi_iovec *iov, int niov) 
+scsi_task_set_iov_in(struct scsi_task *task, struct scsi_iovec *iov, int niov)
 {
 	task->iovector_in.iov = iov;
 	task->iovector_in.niov = niov;
@@ -4090,7 +4086,7 @@ scsi_iovector_add(struct scsi_task *task, struct scsi_iovector *iovector, int le
 	if (len < 0) {
 		return -1;
 	}
-	
+
 	if (iovector->iov == NULL) {
 		iovector->iov = scsi_malloc(task, IOVECTOR_INITAL_ALLOC*sizeof(struct iovec));
 		if (iovector->iov == NULL) {

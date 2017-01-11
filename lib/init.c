@@ -191,7 +191,7 @@ iscsi_create_context(const char *initiator_name)
 	iscsi->tcp_keepcnt=3;
 	iscsi->tcp_keepintvl=30;
 	iscsi->tcp_keepidle=30;
-	
+
 	iscsi->reconnect_max_retries = -1;
 
 	if (getenv("LIBISCSI_DEBUG") != NULL) {
@@ -510,8 +510,10 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 	char *portal;
 	char *user = NULL;
 	char *passwd = NULL;
+#if 0
 	char *target_user = NULL;
 	char *target_passwd = NULL;
+#endif
 	char *target = NULL;
 	char *lun;
 	char *tmp;
@@ -550,8 +552,10 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 
 	user          = getenv("LIBISCSI_CHAP_USERNAME");
 	passwd        = getenv("LIBISCSI_CHAP_PASSWORD");
+#if 0
 	target_user   = getenv("LIBISCSI_CHAP_TARGET_USERNAME");
 	target_passwd = getenv("LIBISCSI_CHAP_TARGET_PASSWORD");
+#endif
 
 	tmp = strchr(portal, '?');
 	if (tmp) {
@@ -567,15 +571,18 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 			if (value != NULL) {
 				*value++ = 0;
 			}
+#if 0
 			if (!strcmp(key, "target_user")) {
 				target_user = value;
 			} else if (!strcmp(key, "target_password")) {
 				target_passwd = value;
-#ifdef HAVE_LINUX_ISER
-			} else if (!strcmp(key, "iser")) {
-				is_iser = 1;
-#endif
 			}
+#endif
+#ifdef HAVE_LINUX_ISER
+			if (!strcmp(key, "iser")) {
+				is_iser = 1;
+			}
+#endif
 			tmp = next;
 		}
 	}
@@ -639,7 +646,7 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 			*tmp=0;
 		}
 	}
-	
+
 	if (iscsi != NULL) {
 		iscsi_url = iscsi_malloc(iscsi, sizeof(struct iscsi_url));
 	} else {
@@ -662,10 +669,12 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 		/* if we do not have normal CHAP, that means we do not have
 		 * bidirectional either.
 		 */
+#if 0
 		if (target_user && target_passwd && target_user[0] && target_passwd[0]) {
 			strncpy(iscsi_url->target_user, target_user, MAX_STRING_SIZE);
 			strncpy(iscsi_url->target_passwd, target_passwd, MAX_STRING_SIZE);
 		}
+#endif
 	}
 
 #ifdef HAVE_LINUX_ISER
@@ -675,7 +684,9 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 				iscsi_set_error(iscsi, "Cannot set transport to iSER");
 		}
 	}
+#if 0
 	iscsi_url->transport = is_iser;
+#endif
 #endif
 
 	if (full) {
@@ -690,7 +701,9 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 	if (iscsi) {
 		iscsi_set_targetname(iscsi, iscsi_url->target);
 		iscsi_set_initiator_username_pwd(iscsi, iscsi_url->user, iscsi_url->passwd);
+#if 0
 		iscsi_set_target_username_pwd(iscsi, iscsi_url->target_user, iscsi_url->target_passwd);
+#endif
 	}
 
 	return iscsi_url;
@@ -735,6 +748,7 @@ iscsi_set_initiator_username_pwd(struct iscsi_context *iscsi,
 }
 
 
+#if 0
 int
 iscsi_set_target_username_pwd(struct iscsi_context *iscsi,
 			      const char *user, const char *passwd)
@@ -748,6 +762,7 @@ iscsi_set_target_username_pwd(struct iscsi_context *iscsi,
 	strncpy(iscsi->target_passwd, passwd, MAX_STRING_SIZE);
 	return 0;
 }
+#endif
 
 
 int

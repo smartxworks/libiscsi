@@ -313,7 +313,7 @@ struct scsi_task {
 	unsigned char cdb[SCSI_CDB_MAX_SIZE];
 
 	enum scsi_residual residual_status;
-	size_t residual;
+	int residual;
 	struct scsi_sense sense;
 	struct scsi_data datain;
 	struct scsi_allocated_memory *mem;
@@ -831,16 +831,15 @@ struct scsi_mode_page {
 };
 
 struct scsi_mode_sense {
-       uint16_t mode_data_length;
+       uint8_t mode_data_length;
        uint8_t medium_type;
        uint8_t device_specific_parameter;
-       uint8_t longlba;
        uint8_t block_descriptor_length;
        struct scsi_mode_page *pages;
 };
 
 EXTERN struct scsi_mode_page *
-scsi_modesense_get_page(struct scsi_mode_sense *ms, 
+scsi_modesense_get_page(struct scsi_mode_sense *ms,
 			enum scsi_modesense_page_code page_code,
 			int subpage_code);
 

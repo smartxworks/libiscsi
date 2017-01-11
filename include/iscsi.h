@@ -144,6 +144,15 @@ EXTERN int iscsi_set_timeout(struct iscsi_context *iscsi, int timeout);
 EXTERN int iscsi_set_tcp_keepalive(struct iscsi_context *iscsi, int idle, int count, int interval);
 
 struct iscsi_url {
+    char portal[MAX_STRING_SIZE+1];
+    char target[MAX_STRING_SIZE+1];
+    char user[MAX_STRING_SIZE+1];
+    char passwd[MAX_STRING_SIZE+1];
+    int lun;
+    struct iscsi_context *iscsi;
+};
+
+struct iscsi_newurl {
        char portal[MAX_STRING_SIZE + 1];
        char target[MAX_STRING_SIZE + 1];
        char user[MAX_STRING_SIZE + 1];
@@ -203,7 +212,9 @@ iscsi_set_initial_r2t(struct iscsi_context *iscsi, enum iscsi_initial_r2t initia
  * The returned structure is freed by calling iscsi_destroy_url()
  */
 EXTERN struct iscsi_url *iscsi_parse_full_url(struct iscsi_context *iscsi, const char *url);
+EXTERN struct iscsi_newurl *iscsi_parse_full_newurl(struct iscsi_context *iscsi, const char *url);
 EXTERN void iscsi_destroy_url(struct iscsi_url *iscsi_url);
+EXTERN void iscsi_destroy_newurl(struct iscsi_url *iscsi_newurl);
 
 /*
  * This function is used to parse an iSCSI Portal URL into a iscsi_url structure.
@@ -341,6 +352,7 @@ EXTERN int iscsi_set_header_digest(struct iscsi_context *iscsi,
 EXTERN int iscsi_set_initiator_username_pwd(struct iscsi_context *iscsi,
     					    const char *user,
 					    const char *passwd);
+#if 0
 /*
  * Specify the username and password to use for target chap authentication.
  * Target/bidirectional CHAP is only supported if you also have normal
@@ -351,6 +363,7 @@ EXTERN int iscsi_set_initiator_username_pwd(struct iscsi_context *iscsi,
 EXTERN int iscsi_set_target_username_pwd(struct iscsi_context *iscsi,
 					 const char *user,
 					 const char *passwd);
+#endif
 
 /*
  * check if the context is logged in or not
@@ -614,7 +627,7 @@ EXTERN void iscsi_free_discovery_data(struct iscsi_context *iscsi,
  *                           structure containing the data returned from
  *                           the server.
  *    SCSI_STATUS_CANCELLED : Discovery was aborted. Command_data is NULL.
- * 
+ *
  * The callback may be NULL if you only want to let libiscsi count the in-flight
  * NOPs.
  */
@@ -1578,7 +1591,7 @@ EXTERN void
 iscsi_set_bind_interfaces(struct iscsi_context *iscsi, char * interfaces);
 
 /* This function is to set if we should retry a failed reconnect
-   
+
    count is defined as follows:
     -1 -> retry forever (default)
     0  -> never retry

@@ -388,7 +388,7 @@ void iscsi_reconnect_cb(struct iscsi_context *iscsi _U_, int status,
 	iscsi->frees += old_iscsi->frees;
 
 	free(old_iscsi);
-	
+
 	/* avoid a reconnect faster than 3 seconds */
 	iscsi->next_reconnect = time(NULL) + 3;
 
@@ -444,17 +444,19 @@ int iscsi_reconnect(struct iscsi_context *old_iscsi)
 	iscsi_set_header_digest(iscsi, old_iscsi->want_header_digest);
 
 	iscsi_set_initiator_username_pwd(iscsi, old_iscsi->user, old_iscsi->passwd);
+#if 0
 	iscsi_set_target_username_pwd(iscsi, old_iscsi->target_user, old_iscsi->target_passwd);
+#endif
 
 	iscsi_set_session_type(iscsi, ISCSI_SESSION_NORMAL);
 
 	iscsi->lun = old_iscsi->lun;
 
 	strncpy(iscsi->portal,old_iscsi->portal,MAX_STRING_SIZE);
-	
+
 	strncpy(iscsi->bind_interfaces,old_iscsi->bind_interfaces,MAX_STRING_SIZE);
 	iscsi->bind_interfaces_cnt = old_iscsi->bind_interfaces_cnt;
-	
+
 	iscsi->log_level = old_iscsi->log_level;
 	iscsi->log_fn = old_iscsi->log_fn;
 	iscsi->tcp_user_timeout = old_iscsi->tcp_user_timeout;
