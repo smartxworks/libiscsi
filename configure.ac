@@ -48,8 +48,7 @@ AM_CONDITIONAL(BUILD_MANPAGES,
 
 AC_CONFIG_HEADER(config.h)
 
-AC_CHECK_LIB([gcrypt], [gcry_control])
-AM_CONDITIONAL([HAVE_LIBGCRYPT], [test $ac_cv_lib_gcrypt_gcry_control = yes])
+AM_CONDITIONAL([HAVE_LIBGCRYPT], [test no = yes])
 
 AC_CACHE_CHECK([for sin_len in sock],libiscsi_cv_HAVE_SOCK_SIN_LEN,[
 AC_TRY_COMPILE([#include <sys/types.h>
@@ -143,6 +142,8 @@ AC_CHECK_MEMBER([struct CU_SuiteInfo.pSetUpFunc],
 AC_SEARCH_LIBS(clock_gettime, rt, [
 	       AC_DEFINE([HAVE_CLOCK_GETTIME],1,[Define if clock_gettime is available])])
 
+CFLAGS="$CFLAGS -pthread"
+LIBS="$LIBS -pthread"
 
 AC_CONFIG_FILES([Makefile]
 		[doc/Makefile]
