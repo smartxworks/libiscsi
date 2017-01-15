@@ -1,17 +1,17 @@
 /* -*-  mode:c; tab-width:8; c-basic-offset:8; indent-tabs-mode:nil;  -*- */
-/* 
+/*
    Copyright (C) 2010 by Ronnie Sahlberg <ronniesahlberg@gmail.com>
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
@@ -112,7 +112,9 @@ void inquiry_supported_pages(struct scsi_inquiry_supported_pages *inq)
 
 void inquiry_standard(struct scsi_inquiry_standard *inq)
 {
+#if 0
 	int i;
+#endif
 
 	printf("Peripheral Qualifier:%s\n",
 		scsi_devqualifier_to_str(inq->qualifier));
@@ -136,6 +138,7 @@ void inquiry_standard(struct scsi_inquiry_standard *inq)
 	printf("Product:%s\n", inq->product_identification);
 	printf("Revision:%s\n", inq->product_revision_level);
 
+#if 0
 	for (i = 0; i < 8; i++) {
 		if (inq->version_descriptor[i] == 0) {
 			continue;
@@ -146,6 +149,7 @@ void inquiry_standard(struct scsi_inquiry_standard *inq)
 			scsi_version_descriptor_to_str(
 				inq->version_descriptor[i]));
 	}
+#endif
 }
 
 void do_inquiry(struct iscsi_context *iscsi, int lun, int evpd, int pc)
@@ -313,13 +317,13 @@ int main(int argc, char *argv[])
 		exit(10);
 	}
 	iscsi_url = iscsi_parse_full_url(iscsi, url);
-	
+
 	if (url) {
 		free(discard_const(url));
 	}
 
 	if (iscsi_url == NULL) {
-		fprintf(stderr, "Failed to parse URL: %s\n", 
+		fprintf(stderr, "Failed to parse URL: %s\n",
 			iscsi_get_error(iscsi));
 		exit(10);
 	}

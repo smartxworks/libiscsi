@@ -1320,7 +1320,9 @@ scsi_inquiry_datain_getfullsize(struct scsi_task *task)
 static struct scsi_inquiry_standard *
 scsi_inquiry_unmarshall_standard(struct scsi_task *task)
 {
+#if 0
 	int i;
+#endif
 
 	struct scsi_inquiry_standard *inq = scsi_malloc(task, sizeof(*inq));
 	if (inq == NULL) {
@@ -1361,9 +1363,11 @@ scsi_inquiry_unmarshall_standard(struct scsi_task *task)
 	inq->qas                    = !!(task_get_uint8(task, 56) & 0x02);
 	inq->ius                    = !!(task_get_uint8(task, 56) & 0x01);
 
+#if 0
 	for (i = 0; i < 8; i++) {
 		inq->version_descriptor[i] = task_get_uint16(task, 58 + i * 2);
 	}
+#endif
 
 	return inq;
 }
@@ -1494,6 +1498,7 @@ scsi_inquiry_unmarshall_block_limits(struct scsi_task *task)
 	inq->max_ws_len            = (inq->max_ws_len << 32)
 				   	| task_get_uint32(task, 40);
 
+#if 0
 	inq->max_atomic_xfer_len   = task_get_uint32(task, 44);
 	inq->atomic_align          = task_get_uint32(task, 48);
 	inq->atomic_gran           = task_get_uint32(task, 52);
@@ -1501,6 +1506,7 @@ scsi_inquiry_unmarshall_block_limits(struct scsi_task *task)
                 task_get_uint32(task, 56);
 	inq->max_atomic_boundary_size =
                 task_get_uint32(task, 60);
+#endif
 
 	return inq;
 }

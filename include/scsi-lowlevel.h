@@ -267,6 +267,7 @@ struct scsi_sense {
 	enum scsi_sense_key key;
 	int                 ascq;
 
+#if 0
 	/*
 	 * Sense specific descriptor. See also paragraph "Sense key specific
 	 * sense data descriptor" in SPC.
@@ -276,6 +277,7 @@ struct scsi_sense {
 	unsigned            bit_pointer_valid:1;
 	unsigned char       bit_pointer;
 	uint16_t            field_pointer;
+#endif
 };
 
 struct scsi_data {
@@ -520,7 +522,9 @@ struct scsi_inquiry_standard {
 	char product_identification[16+1];
 	char product_revision_level[4+1];
 
+#if 0
 	uint16_t version_descriptor[8];
+#endif
 };
 
 enum scsi_inquiry_pagecode {
@@ -561,12 +565,14 @@ struct scsi_inquiry_block_limits {
 	uint32_t unmap_gran_align;		/* unmap_granularity_alignment */
 	uint64_t max_ws_len;			/* maximum_write_same_length */
 
+#if 0
 	/* SBC-4 */
 	uint32_t max_atomic_xfer_len;
 	uint32_t atomic_align;
 	uint32_t atomic_gran;
 	uint32_t max_atomic_tl_with_atomic_boundary;
 	uint32_t max_atomic_boundary_size;
+#endif
 };
 
 struct scsi_inquiry_block_device_characteristics {

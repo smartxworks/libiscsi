@@ -144,18 +144,18 @@ EXTERN int iscsi_set_timeout(struct iscsi_context *iscsi, int timeout);
 EXTERN int iscsi_set_tcp_keepalive(struct iscsi_context *iscsi, int idle, int count, int interval);
 
 struct iscsi_url {
-    char portal[MAX_STRING_SIZE+1];
-    char target[MAX_STRING_SIZE+1];
-    char user[MAX_STRING_SIZE+1];
-    char passwd[MAX_STRING_SIZE+1];
-    int lun;
-    struct iscsi_context *iscsi;
+        char portal[MAX_STRING_SIZE+1];
+        char target[MAX_STRING_SIZE+1];
+        char user[MAX_STRING_SIZE+1];
+        char passwd[MAX_STRING_SIZE+1];
+        int lun;
+        struct iscsi_context *iscsi;
 };
 
 struct iscsi_newurl {
-       char portal[MAX_STRING_SIZE + 1];
-       char target[MAX_STRING_SIZE + 1];
-       char user[MAX_STRING_SIZE + 1];
+       char portal[MAX_STRING_SIZE+1];
+       char target[MAX_STRING_SIZE+1];
+       char user[MAX_STRING_SIZE+1];
        char passwd[MAX_STRING_SIZE + 1];
        char target_user[MAX_STRING_SIZE + 1];
        char target_passwd[MAX_STRING_SIZE + 1];
