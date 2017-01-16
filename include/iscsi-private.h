@@ -365,12 +365,12 @@ void iscsi_decrement_iface_rr(void);
 #define ISCSI_LOG(iscsi, level, format, ...) \
 	do { \
 		if (level <= iscsi->log_level && iscsi->log_fn) { \
-			iscsi_log_message(iscsi, level, format, ## __VA_ARGS__); \
+			iscsi_log_message(iscsi, level, __func__, __FILE__, __LINE__, format, ## __VA_ARGS__); \
 		} \
 	} while (0)
 
 void
-iscsi_log_message(struct iscsi_context *iscsi, int level, const char *format, ...);
+iscsi_log_message(struct iscsi_context *iscsi, int level, const char *func, const char *file, int line, const char *format, ...);
 
 void
 iscsi_add_to_outqueue(struct iscsi_context *iscsi, struct iscsi_pdu *pdu);

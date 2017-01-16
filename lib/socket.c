@@ -875,6 +875,7 @@ iscsi_tcp_service(struct iscsi_context *iscsi, int revents)
 		if (time(NULL) >= iscsi->next_reconnect) {
 			return iscsi_reconnect(iscsi);
 		} else {
+			ISCSI_LOG(iscsi, 7, "waiting on pending reconnect");
 			if (iscsi->old_iscsi) {
 				return 0;
 			}
