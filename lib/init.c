@@ -239,6 +239,8 @@ iscsi_create_context(const char *initiator_name)
 		iscsi->cache_allocations = 1;
 	}
 
+	iscsi->scsi_timeout = 45;
+
 	return iscsi;
 }
 
