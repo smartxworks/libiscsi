@@ -63,6 +63,7 @@ static unsigned int maxsectors;
  * this allows us to redefine how PDU are queued, at times, for
  * testing purposes
  */
+int (*local_iscsi_queue_pdu)(struct iscsi_context *iscsi, struct iscsi_pdu *pdu);
 int (*real_iscsi_queue_pdu)(struct iscsi_context *iscsi, struct iscsi_pdu *pdu);
 
 /*****************************************************************
@@ -999,7 +1000,7 @@ static void parse_and_add_test(const char *test)
                                         t[len] = 0;
                                         continue;
                                 }
-                                break;        
+                                break;
                         }
                         parse_and_add_tests(t);
                 }
@@ -1091,6 +1092,15 @@ static void free_scsi_device(struct scsi_device *sdev)
                 sdev->sgio_fd = -1;
         }
         free(sdev);
+}
+
+int
+iscsi_queue_pdu(struct iscsi_context *iscsi, struct iscsi_pdu *pdu)
+{
+        if (local_iscsi_queue_pdu != NULL) {
+                local_iscsi_queue_pdu(iscsi, pdu);
+        }
+        return real_iscsi_queue_pdu(iscsi, pdu);
 }
 
 int
@@ -1307,7 +1317,7 @@ main(int argc, char *argv[])
 
         /* create a really big buffer we can use in the tests */
         scratch = malloc(65536 * block_size);
-        
+
         inq_task = NULL;
         inquiry(sd, &inq_task, 0, 0, 64, EXPECT_STATUS_GOOD);
         if (inq_task == NULL || inq_task->status != SCSI_STATUS_GOOD) {

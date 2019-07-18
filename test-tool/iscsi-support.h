@@ -42,7 +42,7 @@ extern const char *initiatorname2;
 #define EXPECT_STATUS_TIMEOUT SCSI_STATUS_TIMEOUT, SCSI_SENSE_NO_SENSE, NULL, 0
 #define EXPECT_NO_MEDIUM SCSI_STATUS_CHECK_CONDITION, SCSI_SENSE_NOT_READY, no_medium_ascqs, 3
 #define EXPECT_LBA_OOB SCSI_STATUS_CHECK_CONDITION, SCSI_SENSE_ILLEGAL_REQUEST, lba_oob_ascqs, 1
-#define EXPECT_INVALID_FIELD_IN_CDB SCSI_STATUS_CHECK_CONDITION, SCSI_SENSE_ILLEGAL_REQUEST, invalid_cdb_ascqs,2 
+#define EXPECT_INVALID_FIELD_IN_CDB SCSI_STATUS_CHECK_CONDITION, SCSI_SENSE_ILLEGAL_REQUEST, invalid_cdb_ascqs, 2
 #define EXPECT_PARAM_LIST_LEN_ERR SCSI_STATUS_CHECK_CONDITION, SCSI_SENSE_ILLEGAL_REQUEST, param_list_len_err_ascqs, 1
 #define EXPECT_TOO_MANY_DESCR SCSI_STATUS_CHECK_CONDITION, SCSI_SENSE_ILLEGAL_REQUEST, too_many_desc_ascqs, 2
 #define EXPECT_UNSUPP_DESCR_CODE SCSI_STATUS_CHECK_CONDITION, SCSI_SENSE_ILLEGAL_REQUEST, unsupp_desc_code_ascqs, 2
@@ -53,17 +53,17 @@ extern const char *initiatorname2;
 #define EXPECT_RESERVATION_CONFLICT SCSI_STATUS_RESERVATION_CONFLICT, 0, NULL, 0
 #define EXPECT_COPY_ABORTED SCSI_STATUS_CHECK_CONDITION, SCSI_SENSE_COPY_ABORTED, copy_aborted_ascqs, 3
 
-int no_medium_ascqs[3];
-int lba_oob_ascqs[1];
-int invalid_cdb_ascqs[2];
-int param_list_len_err_ascqs[1];
-int too_many_desc_ascqs[2];
-int unsupp_desc_code_ascqs[2];
-int write_protect_ascqs[3];
-int sanitize_ascqs[1];
-int removal_ascqs[1];
-int miscompare_ascqs[1];
-int copy_aborted_ascqs[3];
+extern int no_medium_ascqs[3];
+extern int lba_oob_ascqs[1];
+extern int invalid_cdb_ascqs[2];
+extern int param_list_len_err_ascqs[1];
+extern int too_many_desc_ascqs[2];
+extern int unsupp_desc_code_ascqs[2];
+extern int write_protect_ascqs[3];
+extern int sanitize_ascqs[1];
+extern int removal_ascqs[1];
+extern int miscompare_ascqs[1];
+extern int copy_aborted_ascqs[3];
 
 extern int loglevel;
 #define LOG_SILENT  0
@@ -782,7 +782,7 @@ struct iscsi_async_state {
 void wait_until_test_finished(struct iscsi_context *iscsi, struct iscsi_async_state *test_state);
 
 struct iscsi_pdu;
-int (*local_iscsi_queue_pdu)(struct iscsi_context *iscsi, struct iscsi_pdu *pdu);
+extern int (*local_iscsi_queue_pdu)(struct iscsi_context *iscsi, struct iscsi_pdu *pdu);
 
 struct scsi_command_descriptor *get_command_descriptor(int opcode, int sa);
 

@@ -2,7 +2,6 @@ AM_CPPFLAGS=-I. -I${srcdir}/../include \
 	"-D_U_=__attribute__((unused)) " \
 	"-D_R_(A,B)=__attribute__((format(printf,A,B)))"
 AM_CFLAGS=$(WARN_CFLAGS)
-LDADD = ../lib/libiscsi.la
 
 EXTRA_DIST = README
 
@@ -11,10 +10,8 @@ dist_noinst_HEADERS = iscsi-support.h \
 
 # libiscsi test tool using cunit
 if ISCSITEST
-bin_PROGRAMS = iscsi-test-cu
-iscsi_test_cu_LDFLAGS = -ldl -lcunit
-iscsi_test_cu_SOURCES = iscsi-test-cu.c \
-	iscsi-support.c \
+lib_LTLIBRARIES = libiscsi-test-cu.la
+libiscsi_test_cu_la_SOURCES = iscsi-support.c \
 	iscsi-multipath.c \
 	test_compareandwrite_simple.c \
 	test_compareandwrite_dpofua.c \
@@ -237,7 +234,10 @@ iscsi_test_cu_SOURCES = iscsi-test-cu.c \
 	test_async_abort_simple.c \
 	test_async_lu_reset_simple.c
 
+libiscsi_test_cu_la_LIBADD = ../lib/libiscsi.la
+
+bin_PROGRAMS = iscsi-test-cu
+iscsi_test_cu_SOURCES = iscsi-test-cu.c
+iscsi_test_cu_LDADD = libiscsi-test-cu.la ../lib/libiscsi.la -ldl -lcunit
+
 endif
-
-
-
